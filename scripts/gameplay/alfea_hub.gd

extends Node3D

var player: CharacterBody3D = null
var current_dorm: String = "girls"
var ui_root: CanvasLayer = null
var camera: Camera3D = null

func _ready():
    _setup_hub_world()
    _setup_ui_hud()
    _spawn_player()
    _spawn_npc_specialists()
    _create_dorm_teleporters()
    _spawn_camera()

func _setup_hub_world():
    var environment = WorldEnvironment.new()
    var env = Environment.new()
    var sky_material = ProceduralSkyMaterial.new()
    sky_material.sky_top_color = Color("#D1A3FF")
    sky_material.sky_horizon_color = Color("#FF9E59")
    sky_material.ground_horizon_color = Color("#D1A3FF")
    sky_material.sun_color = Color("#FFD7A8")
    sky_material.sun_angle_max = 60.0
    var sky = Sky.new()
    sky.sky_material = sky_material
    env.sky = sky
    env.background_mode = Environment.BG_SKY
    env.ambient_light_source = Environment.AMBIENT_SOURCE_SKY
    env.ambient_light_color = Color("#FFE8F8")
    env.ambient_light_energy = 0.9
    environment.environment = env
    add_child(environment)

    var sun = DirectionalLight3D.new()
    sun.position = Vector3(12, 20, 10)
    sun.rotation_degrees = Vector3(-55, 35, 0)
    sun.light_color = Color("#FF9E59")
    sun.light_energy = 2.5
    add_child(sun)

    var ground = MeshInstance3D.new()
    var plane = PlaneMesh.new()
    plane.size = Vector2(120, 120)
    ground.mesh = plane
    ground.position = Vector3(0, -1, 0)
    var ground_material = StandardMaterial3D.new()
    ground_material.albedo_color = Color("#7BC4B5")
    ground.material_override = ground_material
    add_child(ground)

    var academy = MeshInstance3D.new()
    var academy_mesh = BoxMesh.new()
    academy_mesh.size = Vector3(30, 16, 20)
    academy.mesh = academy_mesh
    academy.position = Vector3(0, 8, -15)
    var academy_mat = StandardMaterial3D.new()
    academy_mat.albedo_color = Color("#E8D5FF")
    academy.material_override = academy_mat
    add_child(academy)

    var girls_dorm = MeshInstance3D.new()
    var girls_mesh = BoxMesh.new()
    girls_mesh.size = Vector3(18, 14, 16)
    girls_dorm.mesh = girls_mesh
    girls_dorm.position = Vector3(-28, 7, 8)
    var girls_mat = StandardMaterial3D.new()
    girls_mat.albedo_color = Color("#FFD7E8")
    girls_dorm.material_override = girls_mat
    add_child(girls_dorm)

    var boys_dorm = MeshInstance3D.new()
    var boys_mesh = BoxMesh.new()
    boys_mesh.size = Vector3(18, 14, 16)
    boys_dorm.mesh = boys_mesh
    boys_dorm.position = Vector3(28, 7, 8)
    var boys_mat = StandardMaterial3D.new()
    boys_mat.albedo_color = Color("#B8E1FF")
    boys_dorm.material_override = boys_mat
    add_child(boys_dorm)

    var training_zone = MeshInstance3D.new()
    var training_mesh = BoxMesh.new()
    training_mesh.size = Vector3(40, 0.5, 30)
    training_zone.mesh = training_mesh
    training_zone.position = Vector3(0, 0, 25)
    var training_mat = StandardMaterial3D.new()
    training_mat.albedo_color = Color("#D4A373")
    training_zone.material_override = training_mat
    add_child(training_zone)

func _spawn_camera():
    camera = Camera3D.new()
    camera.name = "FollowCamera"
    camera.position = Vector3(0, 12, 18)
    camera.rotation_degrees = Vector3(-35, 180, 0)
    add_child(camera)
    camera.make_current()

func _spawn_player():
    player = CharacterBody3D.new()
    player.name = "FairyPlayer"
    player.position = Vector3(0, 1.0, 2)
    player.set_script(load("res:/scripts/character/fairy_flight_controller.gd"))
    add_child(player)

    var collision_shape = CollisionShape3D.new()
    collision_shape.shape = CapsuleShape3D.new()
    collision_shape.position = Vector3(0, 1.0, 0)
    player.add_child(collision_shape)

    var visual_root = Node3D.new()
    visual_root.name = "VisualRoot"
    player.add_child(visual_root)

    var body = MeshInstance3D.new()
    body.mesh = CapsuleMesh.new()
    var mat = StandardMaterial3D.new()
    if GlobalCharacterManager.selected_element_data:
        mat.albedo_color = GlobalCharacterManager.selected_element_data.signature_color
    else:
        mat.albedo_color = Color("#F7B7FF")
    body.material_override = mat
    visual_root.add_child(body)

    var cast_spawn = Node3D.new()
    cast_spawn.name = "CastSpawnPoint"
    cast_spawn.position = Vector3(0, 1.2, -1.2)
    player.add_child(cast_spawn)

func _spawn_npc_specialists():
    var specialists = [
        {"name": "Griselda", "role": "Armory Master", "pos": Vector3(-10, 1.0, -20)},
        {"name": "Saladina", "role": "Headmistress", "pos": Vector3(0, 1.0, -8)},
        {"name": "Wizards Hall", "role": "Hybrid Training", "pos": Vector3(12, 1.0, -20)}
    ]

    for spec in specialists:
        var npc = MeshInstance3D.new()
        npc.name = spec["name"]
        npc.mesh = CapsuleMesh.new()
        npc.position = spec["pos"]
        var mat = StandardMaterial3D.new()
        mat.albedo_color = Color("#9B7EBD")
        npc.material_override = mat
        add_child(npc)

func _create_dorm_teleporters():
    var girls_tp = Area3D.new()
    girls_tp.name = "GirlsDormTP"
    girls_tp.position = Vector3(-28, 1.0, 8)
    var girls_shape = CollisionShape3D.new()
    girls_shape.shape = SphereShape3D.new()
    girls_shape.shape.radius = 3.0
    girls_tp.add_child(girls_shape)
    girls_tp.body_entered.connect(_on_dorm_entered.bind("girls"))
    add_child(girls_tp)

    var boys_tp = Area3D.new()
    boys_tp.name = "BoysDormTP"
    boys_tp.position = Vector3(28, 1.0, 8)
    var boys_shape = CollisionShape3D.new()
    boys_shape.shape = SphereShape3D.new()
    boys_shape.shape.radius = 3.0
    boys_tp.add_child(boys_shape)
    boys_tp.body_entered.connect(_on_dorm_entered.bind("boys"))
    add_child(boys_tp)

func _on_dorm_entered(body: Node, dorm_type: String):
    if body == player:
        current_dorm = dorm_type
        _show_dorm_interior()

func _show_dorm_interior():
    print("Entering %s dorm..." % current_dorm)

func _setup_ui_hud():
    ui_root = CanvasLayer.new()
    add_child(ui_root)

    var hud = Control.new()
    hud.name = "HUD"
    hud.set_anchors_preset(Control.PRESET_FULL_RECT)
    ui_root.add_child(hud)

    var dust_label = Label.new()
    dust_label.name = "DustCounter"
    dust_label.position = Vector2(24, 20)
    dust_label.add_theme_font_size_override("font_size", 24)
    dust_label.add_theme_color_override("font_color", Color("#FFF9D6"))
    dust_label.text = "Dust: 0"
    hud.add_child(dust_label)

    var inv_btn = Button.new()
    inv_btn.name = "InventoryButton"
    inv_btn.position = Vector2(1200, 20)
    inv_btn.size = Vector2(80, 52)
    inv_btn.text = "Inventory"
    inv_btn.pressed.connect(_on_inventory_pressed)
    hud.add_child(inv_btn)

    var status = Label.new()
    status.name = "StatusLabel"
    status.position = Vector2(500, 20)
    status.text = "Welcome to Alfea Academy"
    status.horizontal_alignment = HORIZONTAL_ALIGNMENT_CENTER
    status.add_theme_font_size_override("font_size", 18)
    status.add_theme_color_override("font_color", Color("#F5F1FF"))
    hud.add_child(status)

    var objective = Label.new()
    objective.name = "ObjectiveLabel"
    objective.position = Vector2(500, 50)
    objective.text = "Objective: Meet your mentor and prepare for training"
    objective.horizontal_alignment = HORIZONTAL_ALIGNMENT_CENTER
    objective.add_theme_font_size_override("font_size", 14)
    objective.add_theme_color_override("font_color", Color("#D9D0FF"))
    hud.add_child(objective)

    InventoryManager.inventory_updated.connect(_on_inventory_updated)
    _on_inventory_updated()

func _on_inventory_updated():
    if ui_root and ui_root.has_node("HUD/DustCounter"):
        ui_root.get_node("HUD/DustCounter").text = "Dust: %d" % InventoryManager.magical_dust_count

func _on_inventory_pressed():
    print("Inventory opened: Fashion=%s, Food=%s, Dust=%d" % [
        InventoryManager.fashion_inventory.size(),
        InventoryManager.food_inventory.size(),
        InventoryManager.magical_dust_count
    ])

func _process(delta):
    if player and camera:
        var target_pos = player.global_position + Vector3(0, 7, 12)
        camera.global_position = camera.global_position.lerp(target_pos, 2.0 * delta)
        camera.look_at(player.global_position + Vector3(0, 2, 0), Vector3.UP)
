@@ -1,0 +1,273 @@
+extends Control
+
+@export var water_data: FairyCharacterData
+@export var fire_data: FairyCharacterData
+@export var nature_data: FairyCharacterData
+@export var air_data: FairyCharacterData
+
+var element_buttons: Dictionary = {}
+var gender_buttons: Dictionary = {}
+var selected_summary: Label
+var selected_title: Label
+var selected_badge: Panel
+var root: VBoxContainer
+
+func _ready():
+    _ensure_resources()
+    _build_ui()
+    _on_element_selected("Water")
+    _on_gender_selected("female")
+
+func _ensure_resources():
+    if water_data == null:
+        water_data = FairyCharacterData.new()
+        water_data.fairy_name = "Bloom"
+        water_data.fairy_element = "Water"
+        water_data.signature_color = Color("#90D6FF")
+        water_data.base_flight_speed = 12.0
+        water_data.base_vertical_speed = 8.0
+        water_data.base_spell_damage = 18.0
+        water_data.lore_description = "A hopeful guardian of the crystal lagoons and Alfea's moonlit bloom halls."
+
+    if fire_data == null:
+        fire_data = FairyCharacterData.new()
+        fire_data.fairy_name = "Stella"
+        fire_data.fairy_element = "Fire"
+        fire_data.signature_color = Color("#FF9E59")
+        fire_data.base_flight_speed = 10.5
+        fire_data.base_vertical_speed = 7.5
+        fire_data.base_spell_damage = 22.0
+        fire_data.lore_description = "A radiant warrior who turns every battle into a blazing statement."
+
+    if nature_data == null:
+        nature_data = FairyCharacterData.new()
+        nature_data.fairy_name = "Flora"
+        nature_data.fairy_element = "Nature"
+        nature_data.signature_color = Color("#7BC4B5")
+        nature_data.base_flight_speed = 11.0
+        nature_data.base_vertical_speed = 8.0
+        nature_data.base_spell_damage = 17.0
+        nature_data.lore_description = "A patient protector who grows radiant support magic from the forest floor."
+
+    if air_data == null:
+        air_data = FairyCharacterData.new()
+        air_data.fairy_name = "Musa"
+        air_data.fairy_element = "Air"
+        air_data.signature_color = Color("#B8E1FF")
+        air_data.base_flight_speed = 13.5
+        air_data.base_vertical_speed = 9.5
+        air_data.base_spell_damage = 20.0
+        air_data.lore_description = "A swift, elegant tactician whose songs turn the air into a weapon."
+
+func _build_ui():
+    root = VBoxContainer.new()
+    root.name = "SelectionRoot"
+    root.set_anchors_preset(Control.PRESET_FULL_RECT)
+    root.offset_left = 0
+    root.offset_top = 0
+    root.offset_right = 0
+    root.offset_bottom = 0
+    root.add_theme_constant_override("separation", 18)
+    add_child(root)
+
+    var bg = ColorRect.new()
+    bg.name = "Background"
+    bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+    bg.color = Color("#1B123A")
+    root.add_child(bg)
+
+    var overlay = ColorRect.new()
+    overlay.name = "GlowOverlay"
+    overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    overlay.color = Color(0.88, 0.56, 0.83, 0.18)
+    overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root.add_child(overlay)
+
+    var center_container = VBoxContainer.new()
+    center_container.alignment = BoxContainer.ALIGNMENT_CENTER
+    center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+    center_container.offset_left = 64
+    center_container.offset_top = 40
+    center_container.offset_right = -64
+    center_container.offset_bottom = -40
+    root.add_child(center_container)
+
+    var title = Label.new()
+    title.name = "Title"
+    title.text = "Winx Fairy Academy"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 42)
+    title.add_theme_color_override("font_color", Color("#FFF4FF"))
+    center_container.add_child(title)
+
+    var subtitle = Label.new()
+    subtitle.name = "Subtitle"
+    subtitle.text = "Choose your element and begin your rise through Alfea."
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 20)
+    subtitle.add_theme_color_override("font_color", Color("#EBD1FF"))
+    center_container.add_child(subtitle)
+
+    var card = PanelContainer.new()
+    card.name = "SelectionCard"
+    card.custom_minimum_size = Vector2(900, 440)
+    var card_style = StyleBoxFlat.new()
+    card_style.bg_color = Color(0.18, 0.13, 0.34, 0.96)
+    card_style.border_color = Color("#F4B4FF")
+    card_style.border_width_left = 2
+    card_style.border_width_top = 2
+    card_style.border_width_right = 2
+    card_style.border_width_bottom = 2
+    card_style.corner_radius_top_left = 28
+    card_style.corner_radius_top_right = 28
+    card_style.corner_radius_bottom_left = 28
+    card_style.corner_radius_bottom_right = 28
+    card.add_theme_stylebox_override("panel", card_style)
+    center_container.add_child(card)
+
+    var card_inner = VBoxContainer.new()
+    card_inner.add_theme_constant_override("separation", 18)
+    card.add_child(card_inner)
+
+    var element_row = HBoxContainer.new()
+    element_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    card_inner.add_child(element_row)
+
+    for element in ["Water", "Fire", "Nature", "Air"]:
+        var button = Button.new()
+        button.text = element
+        button.custom_minimum_size = Vector2(150, 56)
+        button.add_theme_font_size_override("font_size", 18)
+        button.pressed.connect(_on_element_button_pressed.bind(element))
+        var btn_style = StyleBoxFlat.new()
+        btn_style.bg_color = Color("#B184FF")
+        btn_style.corner_radius_top_left = 18
+        btn_style.corner_radius_top_right = 18
+        btn_style.corner_radius_bottom_left = 18
+        btn_style.corner_radius_bottom_right = 18
+        button.add_theme_stylebox_override("normal", btn_style)
+        var hover_style = StyleBoxFlat.new()
+        hover_style.bg_color = Color("#D29CFF")
+        hover_style.corner_radius_top_left = 18
+        hover_style.corner_radius_top_right = 18
+        hover_style.corner_radius_bottom_left = 18
+        hover_style.corner_radius_bottom_right = 18
+        button.add_theme_stylebox_override("hover", hover_style)
+        button.add_theme_stylebox_override("pressed", btn_style)
+        button.add_theme_stylebox_override("focus", btn_style)
+        element_row.add_child(button)
+        element_buttons[element] = button
+
+    var gender_row = HBoxContainer.new()
+    gender_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    card_inner.add_child(gender_row)
+
+    for gender in ["female", "male"]:
+        var button = Button.new()
+        button.text = gender.capitalize()
+        button.custom_minimum_size = Vector2(140, 50)
+        button.add_theme_font_size_override("font_size", 16)
+        button.pressed.connect(_on_gender_button_pressed.bind(gender))
+
+        var btn_style = StyleBoxFlat.new()
+        btn_style.bg_color = Color("#3B2D5E")
+        btn_style.corner_radius_top_left = 16
+        btn_style.corner_radius_top_right = 16
+        btn_style.corner_radius_bottom_left = 16
+        btn_style.corner_radius_bottom_right = 16
+        button.add_theme_stylebox_override("normal", btn_style)
+        button.add_theme_stylebox_override("pressed", btn_style)
+        button.add_theme_stylebox_override("hover", btn_style)
+        gender_row.add_child(button)
+        gender_buttons[gender] = button
+
+    selected_badge = PanelContainer.new()
+    var badge_style = StyleBoxFlat.new()
+    badge_style.bg_color = Color("#2C1F4B")
+    badge_style.corner_radius_top_left = 16
+    badge_style.corner_radius_top_right = 16
+    badge_style.corner_radius_bottom_left = 16
+    badge_style.corner_radius_bottom_right = 16
+    selected_badge.add_theme_stylebox_override("panel", badge_style)
+    selected_badge.custom_minimum_size = Vector2(760, 150)
+    card_inner.add_child(selected_badge)
+
+    var badge_inner = VBoxContainer.new()
+    badge_inner.alignment = BoxContainer.ALIGNMENT_CENTER
+    selected_badge.add_child(badge_inner)
+
+    selected_title = Label.new()
+    selected_title.text = "Water Fairy"
+    selected_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    selected_title.add_theme_font_size_override("font_size", 30)
+    selected_title.add_theme_color_override("font_color", Color("#FFF5C2"))
+    badge_inner.add_child(selected_title)
+
+    selected_summary = Label.new()
+    selected_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    selected_summary.custom_minimum_size = Vector2(700, 100)
+    selected_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    selected_summary.add_theme_font_size_override("font_size", 16)
+    selected_summary.add_theme_color_override("font_color", Color("#F5EFFD"))
+    badge_inner.add_child(selected_summary)
+
+    var confirm = Button.new()
+    confirm.text = "Enter Alfea"
+    confirm.custom_minimum_size = Vector2(260, 68)
+    confirm.add_theme_font_size_override("font_size", 20)
+    var confirm_style = StyleBoxFlat.new()
+    confirm_style.bg_color = Color("#FFAF5E")
+    confirm_style.corner_radius_top_left = 18
+    confirm_style.corner_radius_top_right = 18
+    confirm_style.corner_radius_bottom_left = 18
+    confirm_style.corner_radius_bottom_right = 18
+    confirm.add_theme_stylebox_override("normal", confirm_style)
+    confirm.add_theme_stylebox_override("hover", confirm_style)
+    confirm.add_theme_stylebox_override("pressed", confirm_style)
+    confirm.pressed.connect(_on_confirm_pressed)
+    center_container.add_child(confirm)
+
+func _on_element_button_pressed(element_name: String):
+    _on_element_selected(element_name)
+
+func _on_gender_button_pressed(gender_type: String):
+    _on_gender_selected(gender_type)
+
+func _on_element_selected(element_name: String):
+    match element_name:
+        "Water":
+            GlobalCharacterManager.selected_element_data = water_data
+        "Fire":
+            GlobalCharacterManager.selected_element_data = fire_data
+        "Nature":
+            GlobalCharacterManager.selected_element_data = nature_data
+        "Air":
+            GlobalCharacterManager.selected_element_data = air_data
+        _:
+            GlobalCharacterManager.selected_element_data = water_data
+
+    _update_summary()
+
+func _on_gender_selected(gender_type: String):
+    GlobalCharacterManager.selected_gender = gender_type.to_lower()
+    _update_summary()
+
+func _update_summary():
+    var data = GlobalCharacterManager.selected_element_data
+    if data == null:
+        selected_summary.text = "No fairy selected."
+        return
+
+    var gender_text = GlobalCharacterManager.selected_gender.capitalize()
+    selected_title.text = "%s %s Fairy" % [gender_text, data.fairy_element]
+    selected_summary.text = "%s\nFlight: %s | Damage: %s | Signature: %s" % [
+        data.lore_description,
+        str(data.base_flight_speed),
+        str(data.base_spell_damage),
+        data.signature_color.to_html(false)
+    ]
+
+func _on_confirm_pressed():
+    if GlobalCharacterManager.selected_element_data:
+        SaveManager.load_game_data()
+        get_tree().change_scene_to_file("res://scenes/alfea_hub.tscn")
